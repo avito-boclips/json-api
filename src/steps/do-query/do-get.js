@@ -4,7 +4,7 @@ import {arrayContains} from "../../util/arrays";
 export default function(requestContext, responseContext, registry) {
   let type    = requestContext.type;
   let adapter = registry.dbAdapter(type);
-  let fields, sorts, includes, filters;
+  let fields, sorts, includes, filters, skip, limit;
 
   // Handle fields, sorts, includes and filters.
   if(!requestContext.aboutRelationship) {
@@ -14,13 +14,15 @@ export default function(requestContext, responseContext, registry) {
     filters = requestContext.queryParams.filter &&
                 requestContext.queryParams.filter.simple;
     includes = parseCommaSeparatedParam(requestContext.queryParams.include);
+    skip = parseCommaSeparatedParam(requestContext.queryParams.skip);
+    limit = parseCommaSeparatedParam(requestContext.queryParams.limit);
 
     if(!includes) {
       includes = registry.defaultIncludes(type);
     }
 
     return adapter
-      .find(type, requestContext.idOrIds, fields, sorts, filters, includes)
+      .find(type, requestContext.idOrIds, fields, sorts, filters, skip, limit, includes)
       .then((resources) => {
         [responseContext.primary, responseContext.included] = resources;
       });
