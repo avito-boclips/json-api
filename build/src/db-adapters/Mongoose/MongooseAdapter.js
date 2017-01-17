@@ -94,7 +94,7 @@ var MongooseAdapter = (function () {
 
   _createClass(MongooseAdapter, [{
     key: "find",
-    value: function find(type, idOrIds, fields, sorts, filters, includePaths) {
+    value: function find(type, idOrIds, fields, sorts, filters, skip, limit, includePaths) {
       var _this = this;
 
       var model = this.getModel(this.constructor.getModelName(type));
@@ -112,6 +112,16 @@ var MongooseAdapter = (function () {
           includedResourcesPromise = (0, _q2["default"])(null);
 
       queryBuilder[mode](idQuery);
+
+      // do pagination
+
+      if (skip) {
+        queryBuilder.skip(skip);
+      }
+
+      if (limit) {
+        queryBuilder.limit(limit);
+      }
 
       // do sorting
       if (Array.isArray(sorts)) {
@@ -639,8 +649,7 @@ var MongooseAdapter = (function () {
 
         var typeOptions = schemaType.options.type;
         var holdsArray = Array.isArray(typeOptions);
-
-        var baseType = holdsArray ? typeOptions[0].ref : typeOptions.name;
+        var baseType = holdsArray ? typeOptions[0].type.name : typeOptions.name;
         var refModelName = util.getReferencedModelName(model, path);
 
         return !refModelName ? new _typesDocumentationFieldType2["default"](baseType, holdsArray) : new _typesDocumentationRelationshipType2["default"](holdsArray, refModelName, _this7.getType(refModelName, pluralizer));
