@@ -29,7 +29,7 @@ export default class MongooseAdapter {
    * documents, as happens below. If it's undefined, though, we're not filtering
    * by id and should return all documents.
    */
-  find(type, idOrIds, fields, sorts, filters, includePaths) {
+  find(type, idOrIds, fields, sorts, filters, skip, limit, includePaths) {
     const model = this.getModel(this.constructor.getModelName(type));
     const queryBuilder = new mongoose.Query(null, null, model, model.collection);
     const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
@@ -38,6 +38,18 @@ export default class MongooseAdapter {
 
 
     queryBuilder[mode](idQuery);
+
+    // do pagination
+      console.log('**************** HERE')
+    if(skip) {
+        console.log('**************** HERE, SKIP')
+        queryBuilder.skip(skip);
+    }
+
+    if(limit) {
+        console.log('**************** HERE, LIMIT')
+        queryBuilder.limit(limit);
+    }
 
     // do sorting
     if(Array.isArray(sorts)) {
@@ -503,11 +515,9 @@ export default class MongooseAdapter {
         return new FieldTypeDocumentation("Id", false);
       }
 
-
       const typeOptions = schemaType.options.type;
       const holdsArray = Array.isArray(typeOptions);
-
-      const baseType = holdsArray ? typeOptions[0].ref : typeOptions.name;
+      const baseType = holdsArray ? typeOptions[0].type.name : typeOptions.name;
       const refModelName = util.getReferencedModelName(model, path);
 
       return !refModelName ?
@@ -515,7 +525,6 @@ export default class MongooseAdapter {
         new RelationshipTypeDocumentation(
           holdsArray, refModelName, this.getType(refModelName, pluralizer)
         );
-
     };
 
     model.schema.eachPath((name, type) => {
